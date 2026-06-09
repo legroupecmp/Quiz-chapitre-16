@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz — Les Prop Firms : Trader le Capital des Autres</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #F5F0E8;
+      color: #1a1a2e;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 3rem 1.25rem 5rem;
+    }
+    .container { width: 100%; max-width: 600px; }
+    .header { margin-bottom: 2rem; }
+    .badge {
+      display: inline-block;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: rgba(26,26,46,0.5);
+      background: rgba(26,26,46,0.06);
+      border: 1px solid rgba(26,26,46,0.12);
+      padding: 4px 12px; border-radius: 99px; margin-bottom: 14px;
+    }
+    .page-title {
+      font-family: 'EB Garamond', serif;
+      font-size: 38px; font-weight: 400;
+      color: #1a1a2e; line-height: 1.2; margin-bottom: 6px;
+    }
+    .page-subtitle { font-size: 14px; color: rgba(26,26,46,0.45); }
+    .divider { height: 1px; background: #ddd6ca; margin: 1.75rem 0; }
+    .progress-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .q-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(26,26,46,0.4); }
+    .score-live { font-size: 13px; font-weight: 500; color: rgba(26,26,46,0.45); }
+    .progress-bar-bg { height: 3px; background: #ddd6ca; border-radius: 99px; margin-bottom: 1.75rem; }
+    .progress-bar-fill { height: 3px; background: #1a1a2e; border-radius: 99px; transition: width 0.5s ease; }
+    .question-card { background: #ffffff; border: 1px solid #ddd6ca; border-radius: 4px; padding: 1.75rem; margin-bottom: 1rem; }
+    .question-num { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(26,26,46,0.3); margin-bottom: 10px; }
+    .question-text { font-family: 'EB Garamond', serif; font-size: 22px; font-weight: 400; color: #1a1a2e; line-height: 1.5; }
+    .options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem; }
+    .option-btn {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 16px; border: 1px solid #ddd6ca; border-radius: 4px;
+      background: #ffffff; cursor: pointer; text-align: left;
+      font-size: 14px; font-family: 'Inter', sans-serif; color: #1a1a2e;
+      transition: all 0.15s; width: 100%;
+    }
+    .option-btn:hover:not(:disabled) { background: #f0ebe1; border-color: #b8b0a0; }
+    .option-letter {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1px solid #ddd6ca; display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600; color: rgba(26,26,46,0.35); flex-shrink: 0; transition: all 0.15s;
+    }
+    .option-btn.correct { border-color: #0F6E56; background: #E1F5EE; }
+    .option-btn.correct .option-letter { background: #0F6E56; color: white; border-color: #0F6E56; }
+    .option-btn.wrong { border-color: #993C1D; background: #FAECE7; }
+    .option-btn.wrong .option-letter { background: #993C1D; color: white; border-color: #993C1D; }
+    .option-btn.reveal { border-color: #0F6E56; background: #E1F5EE; opacity: 0.7; }
+    .option-btn.reveal .option-letter { background: #0F6E56; color: white; border-color: #0F6E56; }
+    .option-btn:disabled { cursor: default; }
+    .feedback { display: none; padding: 13px 16px; border-radius: 4px; font-size: 14px; font-style: italic; line-height: 1.6; margin-bottom: 1rem; }
+    .feedback.show { display: flex; gap: 10px; align-items: flex-start; }
+    .feedback.correct { background: #E1F5EE; color: #085041; border-left: 3px solid #0F6E56; }
+    .feedback.wrong { background: #FAECE7; color: #4A1B0C; border-left: 3px solid #993C1D; }
+    .nav-area { display: flex; justify-content: flex-end; }
+    .btn-next {
+      padding: 10px 28px; border-radius: 4px; background: #1a1a2e; color: white; border: none;
+      font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; letter-spacing: 0.04em;
+      cursor: pointer; display: none; transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-next:hover { opacity: 0.82; }
+    .btn-next:active { transform: scale(0.98); }
+    .results-wrap { display: none; }
+    .score-row {
+      display: flex; align-items: center; gap: 1.75rem;
+      background: #ffffff; border: 1px solid #ddd6ca; border-radius: 4px;
+      padding: 1.75rem; margin-bottom: 1.75rem;
+    }
+    .score-circle {
+      width: 88px; height: 88px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'EB Garamond', serif; font-size: 26px; font-weight: 400; flex-shrink: 0;
+    }
+    .score-text h2 { font-family: 'EB Garamond', serif; font-size: 24px; font-weight: 400; color: #1a1a2e; margin-bottom: 4px; }
+    .score-text p { font-size: 14px; color: rgba(26,26,46,0.5); line-height: 1.5; }
+    .review-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(26,26,46,0.3); margin-bottom: 1rem; }
+    .review-item { background: #ffffff; border: 1px solid #ddd6ca; border-radius: 4px; padding: 1rem 1.25rem; margin-bottom: 8px; }
+    .review-q { font-size: 14px; font-weight: 500; color: #1a1a2e; margin-bottom: 6px; display: flex; gap: 10px; align-items: flex-start; }
+    .review-answer { font-size: 13px; color: rgba(26,26,46,0.5); font-style: italic; display: flex; gap: 6px; }
+    .review-answer strong { color: rgba(26,26,46,0.7); font-style: normal; }
+    .tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; flex-shrink: 0; }
+    .tag-correct { background: #E1F5EE; color: #085041; border: 1px solid #9FE1CB; }
+    .tag-wrong { background: #FAECE7; color: #4A1B0C; border: 1px solid #F5C4B3; }
+    .btn-retry {
+      margin-top: 1.5rem; width: 100%; padding: 11px; border-radius: 4px;
+      border: 1px solid #c8c0b0; background: #fff; color: rgba(26,26,46,0.55);
+      font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+      letter-spacing: 0.04em; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-retry:hover { background: #f0ebe1; color: #1a1a2e; }
+    @media (max-width: 480px) {
+      .page-title { font-size: 30px; }
+      .question-text { font-size: 19px; }
+      .score-row { flex-direction: column; text-align: center; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="header">
+      <div class="badge">Cours 16</div>
+      <h1 class="page-title">Les Prop Firms : Trader le Capital des Autres</h1>
+      <p class="page-subtitle">5 questions pour valider vos connaissances</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <div id="quizWrap">
+      <div class="progress-meta">
+        <span class="q-label" id="qCounter">Question 1 sur 5</span>
+        <span class="score-live" id="scoreLive">0 / 5</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBar" style="width:20%"></div>
+      </div>
+      <div class="question-card">
+        <div class="question-num" id="questionNum">Question 1</div>
+        <div class="question-text" id="questionText"></div>
+      </div>
+      <div class="options" id="optionsWrap"></div>
+      <div class="feedback" id="feedback"></div>
+      <div class="nav-area">
+        <button class="btn-next" id="btnNext">Suivant →</button>
+      </div>
+    </div>
+
+    <div class="results-wrap" id="resultsWrap">
+      <div class="score-row">
+        <div class="score-circle" id="scoreCircle"></div>
+        <div class="score-text">
+          <h2 id="scoreMsg"></h2>
+          <p id="scoreDetail"></p>
+        </div>
+      </div>
+      <div class="review-label">Révision des réponses</div>
+      <div id="reviewList"></div>
+      <button class="btn-retry" onclick="restartQuiz()">↺ Recommencer le quiz</button>
+    </div>
+
+  </div>
+
+  <script>
+    // Bonnes réponses : B, D, A, C, B  (positions 1, 3, 0, 2, 1)
+    const questions = [
+      {
+        q: "Quel est le modèle économique d'une Prop Firm et pourquoi confie-t-elle son capital à des traders externes ?",
+        opts: [
+          "La Prop Firm agit comme un fonds de placement — elle investit le capital des traders participants dans des portefeuilles diversifiés",
+          "La Prop Firm filtre les traders via un challenge, mutualise le risque sur un pool de traders financés, et tire des revenus des frais de challenge — les traders performants génèrent un rendement net positif pour la firme",
+          "La Prop Firm offre un accès gratuit au capital en échange d'une formation obligatoire de 6 mois sur ses stratégies propriétaires",
+          "La Prop Firm partage son capital uniquement avec les traders qui ont démontré au moins 3 ans d'historique de trading profitable sur compte personnel"
+        ],
+        correct: 1,
+        explanation: "Le modèle repose sur trois piliers : la sélection par l'épreuve (le challenge filtre les non-disciplinés avant tout accès au capital réel), la mutualisation du risque (sur 100 traders financés, les performants compensent les pertes des autres), et les revenus des frais de challenge (source de revenus significative indépendante des performances). Ce n'est pas de la philanthropie — c'est une logique économique rigoureuse."
+      },
+      {
+        q: "Concernant le drawdown dans un challenge de Prop Firm, quelle affirmation est exacte ?",
+        opts: [
+          "Le drawdown est un seuil indicatif — la firme peut accorder une tolérance si la performance globale est bonne",
+          "Le drawdown s'applique uniquement sur le compte en phase de vérification, pas pendant le challenge initial",
+          "Il existe un seul type de drawdown : le drawdown statique calculé depuis le capital de départ",
+          "Dépasser le drawdown autorisé, même d'un dollar, entraîne une disqualification immédiate et sans appel — il existe deux types : statique (depuis le capital initial) et trailing (depuis le pic de performance)"
+        ],
+        correct: 3,
+        explanation: "Le drawdown est la règle d'or absolue du challenge. Le dépasser, même d'un cent, entraîne une disqualification immédiate — aucune exception, aucun appel possible. Deux types existent : le drawdown statique (calculé depuis le capital initial, ne change jamais) et le drawdown trailing (calculé depuis le pic de performance, il monte avec les gains et devient plus contraignant). Respecter cette limite n'est pas optionnel — c'est la définition du professionnalisme."
+      },
+      {
+        q: "Quels sont les trois avantages spécifiques de Trade The Pool (TTP) par rapport à un compte personnel pour trader les actions US ?",
+        opts: [
+          "Univers complet des actions US (penny stocks à large caps), short selling intégré sans localisation manuelle, et buying power jusqu'à 20x l'allocation",
+          "Frais de commission réduits à zéro, accès aux marchés européens et asiatiques, et capital fourni sans phase de challenge préalable",
+          "Garantie de remboursement à 100 % en cas d'échec au challenge, levier illimité, et accès prioritaire aux IPOs américaines",
+          "Accès exclusif aux données Level 2 en temps réel, plateforme propriétaire optimisée pour le scalping, et support client 24h/24"
+        ],
+        correct: 0,
+        explanation: "Les trois atouts majeurs de TTP : l'univers actions US complet (du penny stock volatile aux large caps comme Apple ou Tesla), le short selling facilité sans devoir localiser manuellement des actions à emprunter (la firme gère l'infrastructure), et le buying power jusqu'à 20x l'allocation (ce levier transforme une stratégie viable en capital réel sans que le manque de fonds propres ne soit un obstacle)."
+      },
+      {
+        q: "Pourquoi 90 % des candidats échouent-ils aux challenges de Prop Firms, et quelle est la cause d'élimination numéro un ?",
+        opts: [
+          "Parce que les stratégies techniques enseignées en formation sont incompatibles avec les règles des Prop Firms",
+          "Parce que les objectifs de profit sont fixés trop haut — la majorité des traders ne peuvent pas atteindre +8 % en conditions de marché normales",
+          "Parce que les échecs sont comportementaux et non techniques — la cause d'élimination numéro un est le non-respect du stop quotidien, un seul mauvais jour non maîtrisé pouvant invalider des semaines de travail",
+          "Parce que les plateformes des Prop Firms présentent des délais d'exécution qui désavantagent les traders par rapport aux conditions réelles"
+        ],
+        correct: 2,
+        explanation: "90 % des échecs sont comportementaux, jamais techniques. Les trois comportements éliminatoires : manque de patience (forcer des trades sans setup valide), overtrading (multiplier les positions pour rattraper une mauvaise journée), et non-respect du stop quotidien — la cause numéro un. Un stop quotidien typique est à 2 % du compte. Dépasser 6 % en une journée mène à la disqualification probable. Une Prop Firm teste votre gestion du risque, pas votre prédiction du marché."
+      },
+      {
+        q: "Quel est le parcours complet des revenus chez Trade The Pool, et quel avantage unique réduit le risque financier net du trader à zéro ?",
+        opts: [
+          "Le trader perçoit 100 % des profits pendant le challenge, puis 70–90 % sur le compte financé — les frais sont déduits automatiquement des premiers profits",
+          "Les frais du challenge (50–500 $) sont remboursés lors du premier retrait de profits — le risque financier net du trader devient donc zéro après la première extraction de gains",
+          "Le trader reçoit 50 % des profits dès la phase de vérification, puis 80 % sur le compte financé, avec remboursement des frais après 6 mois de performance constante",
+          "Les frais de challenge ne sont jamais remboursés mais sont déduits de la part de profits — le trader reçoit donc 60–80 % nets après déduction"
+        ],
+        correct: 1,
+        explanation: "Le parcours : paiement des frais de challenge (50–500 $ selon la taille du compte visé), réussite et obtention du compte financé, premier cycle de performance avec profit split de 70–90 % pour le trader, puis remboursement des frais du challenge lors du premier retrait. Ce remboursement est l'avantage clé de TTP : le risque financier initial du trader devient nul — il a simplement 'emprunté' les frais à sa future performance."
+      }
+    ];
+
+    let current = 0, score = 0, userAnswers = [];
+    const letters = ['A','B','C','D'];
+
+    function renderQuestion() {
+      const q = questions[current];
+      document.getElementById('progressBar').style.width = ((current+1)/questions.length*100)+'%';
+      document.getElementById('qCounter').textContent = `Question ${current+1} sur ${questions.length}`;
+      document.getElementById('scoreLive').textContent = `${score} / ${questions.length}`;
+      document.getElementById('questionNum').textContent = `Question ${current+1}`;
+      document.getElementById('questionText').textContent = q.q;
+
+      const wrap = document.getElementById('optionsWrap');
+      wrap.innerHTML = '';
+      q.opts.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span>${opt}</span>`;
+        btn.onclick = () => selectAnswer(i, btn);
+        wrap.appendChild(btn);
+      });
+
+      document.getElementById('feedback').className = 'feedback';
+      document.getElementById('feedback').innerHTML = '';
+      document.getElementById('btnNext').style.display = 'none';
+    }
+
+    function selectAnswer(idx, btn) {
+      const q = questions[current];
+      const btns = document.querySelectorAll('.option-btn');
+      btns.forEach(b => b.disabled = true);
+      userAnswers.push(idx);
+
+      const fb = document.getElementById('feedback');
+      if (idx === q.correct) {
+        score++;
+        btn.classList.add('correct');
+        fb.className = 'feedback correct show';
+        fb.innerHTML = `<span>✓</span><span>${q.explanation}</span>`;
+      } else {
+        btn.classList.add('wrong');
+        btns[q.correct].classList.add('reveal');
+        fb.className = 'feedback wrong show';
+        fb.innerHTML = `<span>✗</span><span>Incorrect. ${q.explanation}</span>`;
+      }
+
+      document.getElementById('scoreLive').textContent = `${score} / ${questions.length}`;
+      const nextBtn = document.getElementById('btnNext');
+      nextBtn.style.display = 'block';
+      nextBtn.textContent = current < questions.length - 1 ? 'Suivant →' : 'Voir mes résultats →';
+    }
+
+    document.getElementById('btnNext').onclick = () => {
+      current++;
+      if (current < questions.length) renderQuestion();
+      else showResults();
+    };
+
+    function showResults() {
+      document.getElementById('quizWrap').style.display = 'none';
+      document.getElementById('resultsWrap').style.display = 'block';
+
+      const pct = Math.round(score / questions.length * 100);
+      const circle = document.getElementById('scoreCircle');
+      circle.textContent = `${score} / ${questions.length}`;
+
+      if (pct >= 80) {
+        circle.style.cssText = 'background:#E1F5EE;color:#085041;border:1px solid #9FE1CB;width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"EB Garamond",serif;font-size:26px;flex-shrink:0';
+        document.getElementById('scoreMsg').textContent = 'Excellent travail !';
+        document.getElementById('scoreDetail').textContent = 'Vous comprenez le modèle Prop Firm. Vous êtes prêt à tenter le challenge.';
+      } else if (pct >= 60) {
+        circle.style.cssText = 'background:#FAEEDA;color:#633806;border:1px solid #FAC775;width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"EB Garamond",serif;font-size:26px;flex-shrink:0';
+        document.getElementById('scoreMsg').textContent = 'Bon résultat !';
+        document.getElementById('scoreDetail').textContent = 'Revoyez les règles du drawdown et les comportements éliminatoires.';
+      } else {
+        circle.style.cssText = 'background:#FAECE7;color:#4A1B0C;border:1px solid #F5C4B3;width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"EB Garamond",serif;font-size:26px;flex-shrink:0';
+        document.getElementById('scoreMsg').textContent = 'À retravailler';
+        document.getElementById('scoreDetail').textContent = 'Relisez attentivement le cours sur les Prop Firms avant de vous lancer.';
+      }
+
+      const list = document.getElementById('reviewList');
+      list.innerHTML = '';
+      questions.forEach((q, i) => {
+        const ok = userAnswers[i] === q.correct;
+        const div = document.createElement('div');
+        div.className = 'review-item';
+        div.innerHTML = `
+          <div class="review-q">
+            <span class="tag ${ok ? 'tag-correct' : 'tag-wrong'}">${ok ? '✓' : '✗'}</span>
+            <span>${q.q}</span>
+          </div>
+          <div class="review-answer">
+            <span>→</span>
+            <span>Bonne réponse : <strong>${q.opts[q.correct]}</strong></span>
+          </div>`;
+        list.appendChild(div);
+      });
+    }
+
+    function restartQuiz() {
+      current = 0; score = 0; userAnswers = [];
+      document.getElementById('quizWrap').style.display = 'block';
+      document.getElementById('resultsWrap').style.display = 'none';
+      renderQuestion();
+    }
+
+    renderQuestion();
+  </script>
+</body>
+</html>
